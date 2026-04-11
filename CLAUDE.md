@@ -6,12 +6,12 @@ Platziflix es una plataforma de cursos online con arquitectura multi-plataforma:
 
 ```
                           ┌─────────────────────────────────┐
-                          │         BACKEND (FastAPI)        │
-                          │         localhost:8000           │
-                          │  CourseService + Models + Alembic│
+                          │         BACKEND (FastAPI)       │
+                          │         localhost:8000          │
+                          │ CourseService + Models + Alembic│
                           │  ┌──────────────────────────┐   │
-                          │  │  PostgreSQL 15 (Docker)   │   │
-                          │  │  platziflix_db            │   │
+                          │  │  PostgreSQL 15 (Docker)  │   │
+                          │  │  platziflix_db           │   │
                           │  └──────────────────────────┘   │
                           └──────────────┬──────────────────┘
                                          │ REST API (JSON)
@@ -29,6 +29,7 @@ Platziflix es una plataforma de cursos online con arquitectura multi-plataforma:
 ## Stack Tecnológico
 
 ### Backend
+
 - **Framework**: FastAPI 0.104.0
 - **Base de datos**: PostgreSQL 15
 - **ORM**: SQLAlchemy 2.0
@@ -39,6 +40,7 @@ Platziflix es una plataforma de cursos online con arquitectura multi-plataforma:
 - **Puerto**: 8000
 
 ### Frontend
+
 - **Framework**: Next.js 15.3.3 (App Router)
 - **React**: 19.0.0
 - **Lenguaje**: TypeScript 5 (strict)
@@ -49,6 +51,7 @@ Platziflix es una plataforma de cursos online con arquitectura multi-plataforma:
 - **Puerto**: 3000
 
 ### Mobile Android
+
 - **Lenguaje**: Kotlin
 - **UI**: Jetpack Compose
 - **Network**: Retrofit 2.9.0 + OkHttp + Gson 2.10.1
@@ -57,6 +60,7 @@ Platziflix es una plataforma de cursos online con arquitectura multi-plataforma:
 - **Min SDK**: 24 / Target SDK: 35
 
 ### Mobile iOS
+
 - **Lenguaje**: Swift
 - **UI**: SwiftUI
 - **Network**: URLSession + async/await
@@ -139,19 +143,24 @@ Course ──< course_teachers >── Teacher
 ```
 
 ### BaseModel (heredado por todos los modelos)
+
 - `id` (PK), `created_at`, `updated_at`, `deleted_at` (soft delete)
 
 ### Course
+
 - `name`, `description`, `thumbnail` (URL), `slug` (unique, indexed)
 - Properties computadas: `average_rating`, `total_ratings`
 
 ### Teacher
+
 - `name`, `email` (unique, indexed)
 
 ### Lesson
+
 - `course_id` (FK), `name`, `description`, `slug`, `video_url`
 
 ### CourseRating
+
 - `course_id` (FK), `user_id` (int, sin FK por ahora), `rating` (1-5)
 - UNIQUE constraint en `(course_id, user_id)` donde `deleted_at IS NULL`
 
@@ -160,6 +169,7 @@ Course ──< course_teachers >── Teacher
 ## API Endpoints
 
 ### Cursos
+
 - `GET /` — Bienvenida
 - `GET /health` — Health check + conectividad DB
 - `GET /courses` — Lista todos los cursos con rating stats
@@ -167,6 +177,7 @@ Course ──< course_teachers >── Teacher
 - `GET /classes/{class_id}` — Detalle de clase con video URL
 
 ### Ratings
+
 - `POST /courses/{course_id}/ratings` — Crear o actualizar rating (upsert, 201 en create)
 - `GET /courses/{course_id}/ratings` — Todos los ratings activos
 - `GET /courses/{course_id}/ratings/stats` — Stats agregadas (avg, total, distribución 1-5)
@@ -175,6 +186,7 @@ Course ──< course_teachers >── Teacher
 - `DELETE /courses/{course_id}/ratings/{user_id}` — Soft delete (204)
 
 ### Schemas de respuesta (Pydantic)
+
 ```python
 RatingRequest:  { user_id: int > 0, rating: int 1-5 }
 RatingResponse: { id, course_id, user_id, rating, created_at, updated_at }
@@ -202,24 +214,28 @@ API Response (JSON)
 ```
 
 ### Backend
+
 - **Service Layer**: `CourseService` concentra toda la lógica de negocio
 - **Soft Deletes**: Filtro `deleted_at IS NULL` en todas las queries
 - **Upsert en ratings**: POST crea o actualiza según si existe rating activo
 - **Aggregation en DB**: stats se calculan con SQL (no en Python) para performance
 
 ### Frontend
+
 - **Server Components**: data fetching con `fetch()` directo, `cache: "no-store"`
 - **No client state** para datos principales — solo Server Components
 - **ratingsApi.ts**: fetch con timeout 10s + AbortController + manejo de 404
 - **Type guards**: `isCourseRating()`, `isRatingStats()`, `isValidRating()`
 
 ### Android (MVVM + Clean Architecture)
+
 - **Capas**: `data/` → `domain/` → `presentation/`
 - **Estado**: `CourseListUiState` via StateFlow, eventos via `CourseListUiEvent`
 - **Toggle mock**: `USE_MOCK_DATA = false` en `AppModule.kt`
 - **MVI**: ViewModel recibe eventos, emite estado
 
 ### iOS (MVVM + Clean Architecture)
+
 - **Capas**: `Data/` → `Domain/` → `Presentation/`
 - **ViewModel**: `@MainActor ObservableObject` con `@Published`
 - **Search**: debounce 300ms en `$searchText`
@@ -229,18 +245,19 @@ API Response (JSON)
 
 ## Convenciones de Naming
 
-| Plataforma | Convención |
-|---|---|
-| Python (Backend) | `snake_case` |
+| Plataforma            | Convención                                            |
+| --------------------- | ----------------------------------------------------- |
+| Python (Backend)      | `snake_case`                                          |
 | TypeScript (Frontend) | `camelCase` variables, `PascalCase` componentes/tipos |
-| Kotlin (Android) | `camelCase` variables, `PascalCase` clases |
-| Swift (iOS) | `camelCase` variables, `PascalCase` tipos |
+| Kotlin (Android)      | `camelCase` variables, `PascalCase` clases            |
+| Swift (iOS)           | `camelCase` variables, `PascalCase` tipos             |
 
 ---
 
 ## Comandos de Desarrollo
 
 ### Backend
+
 ```bash
 cd Backend
 make start              # Iniciar Docker Compose (DB + API)
@@ -254,6 +271,7 @@ make clean              # Limpieza completa
 ```
 
 ### Frontend
+
 ```bash
 cd Frontend
 yarn dev          # Servidor de desarrollo (Turbopack)
